@@ -1,17 +1,17 @@
 .PHONY: install run
 
 # Target to install dependencies
+# Make sure you create a virtual environment before
 install:
-	python3 -m venv .venv
-	source .venv/bin/activate
 	@pip install -r requirements.txt
 
-# Target to run the main.py script
+# Target to run the setup.py script
 train:
 	python3 setup.py
 
+# Target to run the main.py script
 run:
-	python3 src.py
+	python3 main.py
 
 # Default target
 all: install run
