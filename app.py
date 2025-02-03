@@ -1,7 +1,7 @@
 import streamlit as st
 import cv2
 import numpy as np
-from inference import run_inference, calculate_metrics, process_img, run_sam2_out_of_the_box
+from inference import run_inference, calculate_metrics, process_img, run_sam2_out_of_the_box, run_sam2_out_of_the_box_with_prompt
 import pandas as pd
 
 st.set_page_config(layout="wide")
@@ -69,8 +69,8 @@ if image and st.button("Segment"):
         st.subheader("SAM2")
         with st.spinner("Running Inference on Out-of-the-box SAM2 Model..."):
             # mask_sam2 = run_sam2_out_of_the_box(img)
-            # # Hardcoded mask since running SAM2 takes too long
-            mask_sam2 = cv2.imread(f"data/sam2-results/{str(image.name).split(".")[0]}.png")
+            mask_sam2 = run_sam2_out_of_the_box_with_prompt(img)
+
         st.image(mask_sam2, caption="Segmentation Map (SAM2)")
 
     # Placeholder for naive & ML approaches

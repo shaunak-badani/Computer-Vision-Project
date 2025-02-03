@@ -26,9 +26,12 @@ model_cfg = "C:/Users/saksh/OneDrive/Documents/Duke Academics/Spring 2025/Deep L
 sam2_fine_tuned = build_sam2(model_cfg, sam2_checkpoint, device="cuda")
 predictor_fine_tuned = SAM2ImagePredictor(sam2_fine_tuned)
 
+sam2 = build_sam2(model_cfg, sam2_checkpoint, device="cuda")
+predictor = SAM2ImagePredictor(sam2)
+
 # Load the out of the box model
-sam2 = build_sam2(model_cfg, sam2_checkpoint, device=torch.device("cuda"), apply_postprocessing=False)
-sam2_mask_generator = SAM2AutomaticMaskGenerator(sam2)
+sam2_1 = build_sam2(model_cfg, sam2_checkpoint, device=torch.device("cuda"), apply_postprocessing=False)
+sam2_mask_generator = SAM2AutomaticMaskGenerator(sam2_1)
 
 def process_img(img):  
     r = min(1024 / img.shape[1], 1024 / img.shape[0])
@@ -50,6 +53,30 @@ def run_sam2_out_of_the_box(img):
     return 1 - masks[0]['segmentation']
 
 
+def run_sam2_out_of_the_box_with_prompt(img):
+    
+    # Load the selected image and mask
+    image = process_img(img)
+
+    # Generate random points for the input
+    num_samples = 50  # Number of points per segment to sample
+    input_points = get_points(image.shape, num_samples)
+
+    with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
+        predictor.set_image(image)
+        masks, scores, logits = predictor.predict(point_coords=input_points, point_labels=np.ones([input_points.shape[0], 1]))
+
+    # Process the predicted masks and sort by scores
+    np_masks = np.array(masks[:, 0])
+    np_scores = scores[:, 0]
+    sorted_masks = np_masks[np.argsort(np_scores)][::-1]
+
+    seg_map = 1 - sorted_masks[0]
+
+    return seg_map
+
+
+
 def run_inference(img):
     # Load the selected image and mask
     image = process_img(img)
@@ -59,7 +86,7 @@ def run_inference(img):
     input_points = get_points(image.shape, num_samples)
 
     # Load the fine-tuned model
-    FINE_TUNED_MODEL_WEIGHTS = "models/fine_tuned_sam2_test_1_1000.torch"
+    FINE_TUNED_MODEL_WEIGHTS = "models/fine_tuned_sam2_400_training_1000.torch"
 
     # Build net and load weights
     predictor_fine_tuned.model.load_state_dict(torch.load(FINE_TUNED_MODEL_WEIGHTS))
