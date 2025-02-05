@@ -37,6 +37,8 @@ if image and st.button("Segment"):
         if mask:
             st.subheader("Ground Truth")
             mask_img = cv2.imdecode(np.asarray(bytearray(mask.read())), cv2.IMREAD_GRAYSCALE)
+            # convert mask_img to binary
+            mask_img = np.where(mask_img > 128, 255, 0).astype(np.uint8)
             st.image(mask_img, caption="Ground Truth Mask")
             pixel_acc, iou_score, dice_score, precision_score, recall_score, specificity_score, loss = calculate_metrics(process_img(mask_img), seg_map)
         
@@ -50,14 +52,14 @@ if image and st.button("Segment"):
 
     if mask:
         metrics_data = {
-            "Models": ["Fine Tuned SAM2 (Our)", "UNet (Paper)", "LinkNet (Paper)", "Atten-UNet (Paper)"],
-            "Loss": [loss, 0.2503, 0.2018, 0.2719],
-            "Accuracy": [pixel_acc, 0.9174, 0.9426, 0.9780],
-            "Dice Coefficient": [dice_score, 0.9414, 0.9497, 0.9829],
-            "IoU": [iou_score, 0.8916, 0.9083, 0.9665],
-            "Precision": [precision_score, 0.9332, 0.9474, 0.9833],
-            "Recall": [recall_score, 0.9448, 0.9557, 0.9825],
-            "Specificity": [specificity_score, 0.8982, 0.9232, 0.9700]
+            "Models": ["Fine Tuned SAM2 Current (Our)", "Fine Tuned SAM2 Avg (Our)", "UNet (Paper)", "LinkNet (Paper)", "Atten-UNet (Paper)"],
+            "Loss": [loss, 0.0666, 0.2503, 0.2018, 0.2719],
+            "Accuracy": [pixel_acc, 0.9562, 0.9174, 0.9426, 0.9780],
+            "Dice Coefficient": [dice_score, 0.9634, 0.9414, 0.9497, 0.9829],
+            "IoU": [iou_score, 0.9265, 0.8916, 0.9083, 0.9665],
+            "Precision": [precision_score, 0.9839, 0.9332, 0.9474, 0.9833],
+            "Recall": [recall_score, 0.9562, 0.9448, 0.9557, 0.9825],
+            "Specificity": [specificity_score, 0.9654, 0.8982, 0.9232, 0.9700]
         }
 
         df_metrics = pd.DataFrame(metrics_data)
