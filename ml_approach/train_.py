@@ -9,69 +9,54 @@ from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
 import kagglehub
 
-def get_image_paths(base_dir):
-    """Get paths for healthy and anemic images"""
-    healthy_dir = os.path.join(base_dir, 'AneRBC_dataset/AneRBC-II/Healthy_individuals/Original_images')
-    anemic_dir = os.path.join(base_dir, 'AneRBC_dataset/AneRBC-II/Anemic_individuals/Original_images')
-    
-    healthy_images = [(os.path.join(healthy_dir, img), 0) for img in os.listdir(healthy_dir) if img.endswith('.png')]
-    anemic_images = [(os.path.join(anemic_dir, img), 1) for img in os.listdir(anemic_dir) if img.endswith('.png')]
-    
-    return healthy_images + anemic_images
-
-def process_image(img_path):
-    """Convert image to grayscale and normalize"""
+def load_and_process_image(img_path):
+    """Load image, apply Otsu's thresholding and extract HOG features"""
     img = cv2.imread(img_path)
     if img is None:
         return None
-    return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY).astype(np.float32) / 255.0
-
-def show_hog(img_path):
-    """Show original, grayscale and HOG features"""
-    # Get images
-    original = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
-    gray = process_image(img_path)
+        
+    # Process image
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     
-    # Get HOG
-    _, hog_img = hog(gray, orientations=9, pixels_per_cell=(16, 16),
-                     cells_per_block=(2, 2), visualize=True, channel_axis=None)
+    # Extract HOG features
+    features = hog(thresh, orientations=9, pixels_per_cell=(16, 16),
+                  cells_per_block=(2, 2), visualize=False, channel_axis=None)
     
-    # Plot
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
-    ax1.imshow(original)
-    ax2.imshow(gray, cmap='gray')
-    ax3.imshow(hog_img, cmap='gray')
-    plt.show()
-
-def extract_features(img_paths_and_labels):
-    """Extract HOG features from all images"""
-    features, labels = [], []
-    
-    for i, (path, label) in enumerate(img_paths_and_labels):
-        if i % 100 == 0:
-            print(f'Processing image {i}/{len(img_paths_and_labels)}')
-            
-        img = process_image(path)
-        if img is not None:
-            feat = hog(img, orientations=9, pixels_per_cell=(16, 16),
-                      cells_per_block=(2, 2), visualize=False, channel_axis=None)
-            features.append(feat)
-            labels.append(label)
-            
-    return np.array(features), np.array(labels)
+    return features
 
 def main():
     # Load dataset
     dataset = kagglehub.dataset_download("jocelyndumlao/anerbc-anemia-diagnosis-using-rbc-images")
     base_dir = os.path.join(dataset, 'AneRBC dataset a benchmark dataset for computer-aided anemia diagnosis using RBC images. httpsdoi.org10.1093databasebaae120')
     
-    # Get image paths and show HOG features for samples
-    image_paths = get_image_paths(base_dir)
-    show_hog(image_paths[0][0])  # Show healthy sample
-    show_hog(image_paths[-1][0])  # Show anemic sample
+    # Get image paths
+    healthy_dir = os.path.join(base_dir, 'AneRBC_dataset/AneRBC-II/Healthy_individuals/Original_images')
+    anemic_dir = os.path.join(base_dir, 'AneRBC_dataset/AneRBC-II/Anemic_individuals/Original_images')
     
-    # Extract features
-    X, y = extract_features(image_paths)
+    # Create dataset
+    features, labels = [], []
+    
+    # Process healthy images
+    for img in os.listdir(healthy_dir):
+        if img.endswith('.png'):
+            feat = load_and_process_image(os.path.join(healthy_dir, img))
+            if feat is not None:
+                features.append(feat)
+                labels.append(0)
+    
+    # Process anemic images
+    for img in os.listdir(anemic_dir):
+        if img.endswith('.png'):
+            feat = load_and_process_image(os.path.join(anemic_dir, img))
+            if feat is not None:
+                features.append(feat)
+                labels.append(1)
+    
+    # Convert to numpy arrays
+    X = np.array(features)
+    y = np.array(labels)
     
     # Split and scale data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -82,6 +67,9 @@ def main():
     # Train and evaluate
     model = LGBMClassifier(random_state=42)
     model.fit(X_train, y_train)
+    
+    # Print results
+    print("\nClassification Report:")
     print(classification_report(y_test, model.predict(X_test)))
 
 if __name__ == "__main__":

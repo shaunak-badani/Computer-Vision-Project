@@ -31,7 +31,6 @@ def preprocess_image(image_path):
     Load and preprocess image
     """
     try:
-        # Read image
         img = cv2.imread(image_path)
         if img is None:
             print(f"Failed to read image: {image_path}")
