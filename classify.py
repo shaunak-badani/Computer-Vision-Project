@@ -4,11 +4,7 @@ import numpy as np
 import pandas as pd
 from skimage.feature import graycomatrix, graycoprops
 from skimage.measure import regionprops, label
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, f1_score
 import joblib
-from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
@@ -17,13 +13,14 @@ def extract_features(image_path, mask_path):
     image = cv2.imread(image_path)
     mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
     binary_mask = np.where(mask == 255, 0, 1).astype(np.uint8)
+    contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     segmented = cv2.bitwise_and(image, image, mask=binary_mask)
     gray = cv2.cvtColor(segmented, cv2.COLOR_BGR2GRAY)
 
     # Morphological features
     props = regionprops(label(mask))
-    rbc_count = len(props)
+    rbc_count = len(contours)
     area, perimeter, eccentricity = 0, 0, 0
     if props:
         area = props[0].area
@@ -95,26 +92,4 @@ data, labels = zip(*results)  # Unzip into separate lists
 # Convert to DataFrame
 feature_names = ["rbc_count", "area", "perimeter", "eccentricity", "contrast", "correlation", "energy", "homogeneity", "mean_intensity", "mean_red", "std_red", "red_green_ratio"]
 df = pd.DataFrame(data, columns=feature_names)
-df.to_csv(os.path.join(base_dir, 'segmentation_features_fancy.csv'), index=False)
-
-# Train/Test Split
-X_train, X_test, y_train, y_test = train_test_split(df, labels, test_size=0.2, random_state=42)
-
-# Standardize features
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
-
-# Train classifier
-clf = RandomForestClassifier(n_estimators=100, random_state=42)
-clf.fit(X_train, y_train)
-
-# Save model & scaler
-joblib.dump(clf, "models/rf_anemia_model_fancy.pkl")
-joblib.dump(scaler, "models/rf_scaler_fancy.pkl")
-print("Model and scaler saved successfully.")
-
-# Evaluate
-y_pred = clf.predict(X_test)
-print("Accuracy:", accuracy_score(y_test, y_pred))
-print("F1 Score:", f1_score(y_test, y_pred))
+df.to_csv(os.path.join(base_dir, 'segmentation_features.csv'), index=False)

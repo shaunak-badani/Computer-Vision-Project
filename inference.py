@@ -162,8 +162,16 @@ def show_otsus_thresholding(img):
     _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     # Extract HOG features
-    features = hog(thresh, orientations=9, pixels_per_cell=(16, 16),
-                  cells_per_block=(2, 2), visualize=False, channel_axis=None)
+    _, hog_image = hog(
+        gray,
+        orientations=9,
+        pixels_per_cell=(16, 16),
+        cells_per_block=(2, 2),
+        visualize=True,
+        channel_axis=None
+    )
     
-    return features, thresh
+    hog_image = (hog_image - hog_image.min()) / (hog_image.max() - hog_image.min())
     
+    return hog_image, thresh
+

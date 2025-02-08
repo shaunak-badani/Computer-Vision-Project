@@ -60,14 +60,14 @@ if image and st.button("Segment"):
 
     with col5:
         st.subheader("Otsu Thresholding")
-        hog_features, otsu_image = show_otsus_thresholding(img)
+        hog_image, otsu_image = show_otsus_thresholding(img)
         st.image(otsu_image)
         pixel_acc_otsu, iou_score_otsu, dice_score_otsu, precision_score_otsu, recall_score_otsu, specificity_score_otsu, loss_otsu = calculate_metrics(process_img(otsu_image), seg_map)
         
         
     with col6:
         st.subheader("HOG Features")
-        st.image(hog_features)
+        st.image(hog_image)
 
 
     if mask:
