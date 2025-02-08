@@ -1,7 +1,7 @@
 import streamlit as st
 import cv2
 import numpy as np
-from inference import run_inference, calculate_metrics, process_img, run_sam2_out_of_the_box_with_prompt, show_otsus_thresholding
+from inference import run_inference, calculate_metrics, process_img, run_sam2_out_of_the_box_with_prompt, show_otsus_thresholding, predict_anemia
 import pandas as pd
 
 st.set_page_config(layout="wide")
@@ -71,6 +71,7 @@ if image and st.button("Segment"):
 
 
     if mask:
+        st.header("Segmentation Results")
         metrics_data = {
             "Models": ["Fine Tuned SAM2 Current (Our)", "Fine Tuned SAM2 Avg (Our)", "Otsu ML Approach (Our)", "UNet (Paper)", "LinkNet (Paper)", "Atten-UNet (Paper)"],
             "Loss": [loss, 0.0666, loss_otsu, 0.2503, 0.2018, 0.2719],
@@ -83,6 +84,22 @@ if image and st.button("Segment"):
         }
 
         df_metrics = pd.DataFrame(metrics_data)
-
         st.table(df_metrics)
-        
+
+        st.header("Classification Results")
+        metrics_data = {
+            "Models": ["HOG + LightGBM (Our)", "SAM + Decision Tree (Our)", "MobileNetV2", "Resnet152V2", "VGG16", "InceptionV3"],
+            "Accuracy": [0.77, 0.0, 0.84, 0.62, 0.76, 0.70],
+            "Precision": [0.71, 0.0, 0.84, 0.85, 0.84, 0.75],
+            "Recall": [0.85, 0.0, 0.86, 0.91, 0.94, 0.94],
+            "F1 Score": [0.78, 0.0, 0.87, 0.87, 0.86, 0.86]
+        }
+
+        df_metrics = pd.DataFrame(metrics_data)
+        st.table(df_metrics)
+
+        st.subheader("Classification Predictions")
+        pred = predict_anemia(img)
+        st.write("Predictions for LightGBM Model: ")
+        st.write("Prediction: " + pred['prediction'])
+        st.write("Confidence: " + str(pred['confidence']))
