@@ -89,10 +89,10 @@ if image and st.button("Segment"):
         st.header("Classification Results")
         metrics_data = {
             "Models": ["HOG + LightGBM (Our)", "SAM + Decision Tree (Our)", "MobileNetV2", "Resnet152V2", "VGG16", "InceptionV3"],
-            "Accuracy": [0.77, 0.0, 0.84, 0.62, 0.76, 0.70],
-            "Precision": [0.71, 0.0, 0.84, 0.85, 0.84, 0.75],
-            "Recall": [0.85, 0.0, 0.86, 0.91, 0.94, 0.94],
-            "F1 Score": [0.78, 0.0, 0.87, 0.87, 0.86, 0.86]
+            "Accuracy": [0.77, 0.76, 0.84, 0.62, 0.76, 0.70],
+            "Precision": [0.71, 0.80, 0.84, 0.85, 0.84, 0.75],
+            "Recall": [0.85, 0.71, 0.86, 0.91, 0.94, 0.94],
+            "F1 Score": [0.78, 0.75, 0.87, 0.87, 0.86, 0.86]
         }
 
         df_metrics = pd.DataFrame(metrics_data)
@@ -100,12 +100,12 @@ if image and st.button("Segment"):
 
         st.header("Classification Predictions")
         lightgbm_pred = predict_anemia_lgbm(img)
-        dt_pred = predict_anemia_dt(img)
+        dt_pred = predict_anemia_dt(img, mask)
 
         predictions_data = {
             "Models": ["HOG + LightGBM (Our)", "SAM + Decision Tree (Our)"],
-            "Prediction": [lightgbm_pred['prediction'], "placeholder"],
-            "Confidence": [str(lightgbm_pred['confidence']), 0.0],
+            "Prediction": [lightgbm_pred['prediction'], "dt_pred['prediction']"],
+            "Confidence": [str(lightgbm_pred['confidence']), "str(dt_pred['confidence'])"],
         }
         st.table(predictions_data)
 

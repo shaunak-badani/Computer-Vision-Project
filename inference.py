@@ -2,10 +2,12 @@ import os
 import matplotlib.pyplot as plt
 import cv2
 import numpy as np
-from tqdm import tqdm
-import matplotlib.colors as mcolors
-import pandas as pd
-import streamlit as st
+import os
+import cv2
+import numpy as np
+from skimage.feature import graycomatrix, graycoprops
+from skimage.measure import regionprops, label
+import joblib
 from skimage.feature import hog
 import joblib
 
@@ -19,7 +21,6 @@ sys.path.append(os.path.abspath('segment-anything-2'))
 from sklearn.model_selection import train_test_split
 from sam2.build_sam import build_sam2
 from sam2.sam2_image_predictor import SAM2ImagePredictor
-from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
 
 sam2_checkpoint = "segment-anything-2/sam2_hiera_small.pt"
 model_cfg = "C:/Users/saksh/OneDrive/Documents/Duke Academics/Spring 2025/Deep Learning/CV-Module-Project/segment-anything-2/sam2/configs/sam2/sam2_hiera_s.yaml"
@@ -216,10 +217,6 @@ def predict_anemia_lgbm(img):
         result = {
             'prediction': 'Anemic' if prediction == 1 else 'Healthy',
             'confidence': float(probabilities[prediction]),
-            'probabilities': {
-                'Healthy': float(probabilities[0]),
-                'Anemic': float(probabilities[1])
-            }
         }
         
         return result
@@ -229,6 +226,73 @@ def predict_anemia_lgbm(img):
         return None
     
 
-def predict_anemia_dt(img):
-    pass
+def extract_features(image, mask):
+    """Extracts morphological, texture, and color features from a masked image."""
+
+    binary_mask = np.where(mask == 255, 0, 1).astype(np.uint8)
+    contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    MIN_RBC_AREA = 150.0
+    filtered_contours = []
+
+    for contour in contours:
+            contour_area = cv2.contourArea(contour)
+            if contour_area > MIN_RBC_AREA:
+                filtered_contours.append(contour)
+
+    segmented = cv2.bitwise_and(image, image, mask=binary_mask)
+    gray = cv2.cvtColor(segmented, cv2.COLOR_BGR2GRAY)
+
+    # Morphological features
+    props = regionprops(label(mask))
+    rbc_count = len(filtered_contours)
+    area, perimeter, eccentricity = 0, 0, 0
+    if props:
+        area = props[0].area
+        perimeter = props[0].perimeter
+        eccentricity = props[0].eccentricity
+
+    # Texture features (GLCM) - Optimized by reducing gray levels
+    gray = cv2.convertScaleAbs(gray, alpha=(255.0 / 64))  # Reduce gray levels to 64
+    glcm = graycomatrix(gray, distances=[1], angles=[0], symmetric=True, normed=True)
+    contrast = graycoprops(glcm, 'contrast')[0, 0]
+    correlation = graycoprops(glcm, 'correlation')[0, 0]
+    energy = graycoprops(glcm, 'energy')[0, 0]
+    homogeneity = graycoprops(glcm, 'homogeneity')[0, 0]
+
+    # Color features (Histogram)
+    hist = cv2.calcHist([segmented], [0], mask, [256], [0, 256])
+    mean_intensity = np.mean(hist)
+    mean_red = np.mean(segmented[:, :, 2])  # Red channel intensity
+    std_red = np.std(segmented[:, :, 2])  # Variation in red intensity
+    red_green_ratio = mean_red / (np.mean(segmented[:, :, 1]) + 1e-7)  # Ratio of Red to Green
+    
+
+    return [rbc_count, area, perimeter, eccentricity, contrast, correlation, energy, homogeneity, mean_intensity, mean_red, std_red, red_green_ratio]
+
+
+def predict_anemia_dt(img, mask):
+    try:
+        # Load the classifier
+        classifier = joblib.load('models/decision_tree_model.joblib')
+        model = classifier['model']
+        scaler = classifier['scaler']
+        
+        features = extract_features(img, mask)
+        scaled_features = scaler.transform([features])
+        
+        # Make prediction
+        prediction = model.predict(scaled_features)[0]
+        probabilities = model.predict_proba(scaled_features)[0]
+        
+        result = {
+            'prediction': 'Anemic' if prediction == 1 else 'Healthy',
+            'confidence': float(probabilities[prediction]),
+        }
+        
+        return result
+        
+    except Exception as e:
+        print(f"Error during prediction: {str(e)}")
+        return None
 

@@ -27,8 +27,6 @@ data = pd.read_csv(features_file)
 
 
 # Convert to DataFrame
-# feature_names = ["area", "perimeter", "eccentricity", "contrast", "correlation", "energy", "homogeneity", "mean_intensity"]
-# feature_names = ["rbc_count", "area", "perimeter", "eccentricity", "contrast", "correlation", "energy", "homogeneity", "mean_intensity", "mean_red", "std_red", "red_green_ratio"]
 feature_names = ["rbc_count", "area", "contrast", "correlation", "mean_intensity", "mean_red", "std_red", "red_green_ratio"]
 
 df = pd.DataFrame(data, columns=feature_names)
@@ -69,4 +67,9 @@ print("F1 Score:", f1_score(y_test, y_pred))
 print("Precision Score:", precision_score(y_test, y_pred))
 print("Recall Score:", recall_score(y_test, y_pred))
 
-joblib.dump(clf, "decision_tree_model.pkl")
+
+classifier = {
+        'model': clf,
+        'scaler': scaler,
+    }
+joblib.dump(classifier, 'decision_tree_model.joblib')
