@@ -27,6 +27,9 @@ model_cfg = "C:/Users/saksh/OneDrive/Documents/Duke Academics/Spring 2025/Deep L
 # Load the fine-tuned model
 sam2_fine_tuned = build_sam2(model_cfg, sam2_checkpoint, device="cuda")
 predictor_fine_tuned = SAM2ImagePredictor(sam2_fine_tuned)
+FINE_TUNED_MODEL_WEIGHTS = "models/fine_tuned_sam2_400_training_1000.torch"
+# Build net and load weights
+predictor_fine_tuned.model.load_state_dict(torch.load(FINE_TUNED_MODEL_WEIGHTS))
 
 sam2 = build_sam2(model_cfg, sam2_checkpoint, device="cuda")
 predictor = SAM2ImagePredictor(sam2)
@@ -72,12 +75,6 @@ def run_inference(img):
     # Generate random points for the input
     num_samples = 50  # Number of points per segment to sample
     input_points = get_points(image.shape, num_samples)
-
-    # Load the fine-tuned model
-    FINE_TUNED_MODEL_WEIGHTS = "models/fine_tuned_sam2_400_training_1000.torch"
-
-    # Build net and load weights
-    predictor_fine_tuned.model.load_state_dict(torch.load(FINE_TUNED_MODEL_WEIGHTS))
 
     # Perform inference and predict masks
     with torch.no_grad():
@@ -177,7 +174,7 @@ def show_otsus_thresholding(img):
     return hog_image, thresh
 
 
-def predict_anemia(img):
+def predict_anemia_lgbm(img):
     """
     Predict anemia from a single RBC image using saved model
     
@@ -230,4 +227,8 @@ def predict_anemia(img):
     except Exception as e:
         print(f"Error during prediction: {str(e)}")
         return None
+    
+
+def predict_anemia_dt(img):
+    pass
 

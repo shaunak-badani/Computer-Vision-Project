@@ -1,7 +1,7 @@
 import streamlit as st
 import cv2
 import numpy as np
-from inference import run_inference, calculate_metrics, process_img, run_sam2_out_of_the_box_with_prompt, show_otsus_thresholding, predict_anemia
+from inference import run_inference, calculate_metrics, process_img, run_sam2_out_of_the_box_with_prompt, show_otsus_thresholding, predict_anemia_lgbm, predict_anemia_dt
 import pandas as pd
 
 st.set_page_config(layout="wide")
@@ -98,8 +98,15 @@ if image and st.button("Segment"):
         df_metrics = pd.DataFrame(metrics_data)
         st.table(df_metrics)
 
-        st.subheader("Classification Predictions")
-        pred = predict_anemia(img)
-        st.write("Predictions for LightGBM Model: ")
-        st.write("Prediction: " + pred['prediction'])
-        st.write("Confidence: " + str(pred['confidence']))
+        st.header("Classification Predictions")
+        lightgbm_pred = predict_anemia_lgbm(img)
+        dt_pred = predict_anemia_dt(img)
+
+        predictions_data = {
+            "Models": ["HOG + LightGBM (Our)", "SAM + Decision Tree (Our)"],
+            "Prediction": [lightgbm_pred['prediction'], "placeholder"],
+            "Confidence": [str(lightgbm_pred['confidence']), 0.0],
+        }
+        st.table(predictions_data)
+
+        st.header("Decision Tree Explainability")
