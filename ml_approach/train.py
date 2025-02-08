@@ -309,14 +309,15 @@ def main():
     
     print("\nSaving classifier...")
     classifier = {
-        'model': model,
-        'scaler': scaler,
-        'hog_params': {
-            'orientations': 9,
-            'pixels_per_cell': (16, 16),
-            'cells_per_block': (2, 2)
-        }
-    }
+    'model': model,
+    'scaler': scaler,
+    'hog_params': {
+        'orientations': 9,
+        'pixels_per_cell': (16, 16),
+        'cells_per_block': (2, 2)
+    },
+    'target_size': (384, 384)  
+}
     joblib.dump(classifier, 'anemia_classifier.joblib')
     print("Model saved as anemia_classifier.joblib")
 
