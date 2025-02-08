@@ -6,6 +6,7 @@ from tqdm import tqdm
 import matplotlib.colors as mcolors
 import pandas as pd
 import streamlit as st
+from skimage.feature import hog
 
 
 import torch
@@ -29,10 +30,6 @@ predictor_fine_tuned = SAM2ImagePredictor(sam2_fine_tuned)
 sam2 = build_sam2(model_cfg, sam2_checkpoint, device="cuda")
 predictor = SAM2ImagePredictor(sam2)
 
-# Load the out of the box model
-sam2_1 = build_sam2(model_cfg, sam2_checkpoint, device=torch.device("cuda"), apply_postprocessing=False)
-sam2_mask_generator = SAM2AutomaticMaskGenerator(sam2_1)
-
 def process_img(img):  
     r = min(1024 / img.shape[1], 1024 / img.shape[0])
     img = cv2.resize(img, (int(img.shape[1] * r), int(img.shape[0] * r)))
@@ -42,16 +39,6 @@ def process_img(img):
 def get_points(image_shape, num_points):  
     points = np.random.randint(0, [image_shape[1], image_shape[0]], size=(num_points, 1, 2))
     return points
-
-def run_sam2_out_of_the_box(img):
-    
-    masks = sam2_mask_generator.generate(img)
-    masks = sorted(masks, key=lambda x: x['predicted_iou'], reverse=True)
-
-    print(masks[0])
-
-    return 1 - masks[0]['segmentation']
-
 
 def run_sam2_out_of_the_box_with_prompt(img):
     
@@ -163,3 +150,20 @@ def calculate_metrics(mask, seg_map):
     loss = dice_loss(mask_binary, seg_map_binary)
 
     return pixel_acc, iou_score, dice_score, precision_score, recall_score, specificity_score, loss
+
+
+
+def show_otsus_thresholding(img):
+    """Show original, grayscale and HOG features"""
+
+    # Process image
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    # Extract HOG features
+    features = hog(thresh, orientations=9, pixels_per_cell=(16, 16),
+                  cells_per_block=(2, 2), visualize=False, channel_axis=None)
+    
+    return features, thresh
+    
