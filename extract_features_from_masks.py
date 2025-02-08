@@ -15,12 +15,20 @@ def extract_features(image_path, mask_path):
     binary_mask = np.where(mask == 255, 0, 1).astype(np.uint8)
     contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+    MIN_RBC_AREA = 150.0
+    filtered_contours = []
+
+    for contour in contours:
+            contour_area = cv2.contourArea(contour)
+            if contour_area > MIN_RBC_AREA:
+                filtered_contours.append(contour)
+
     segmented = cv2.bitwise_and(image, image, mask=binary_mask)
     gray = cv2.cvtColor(segmented, cv2.COLOR_BGR2GRAY)
 
     # Morphological features
     props = regionprops(label(mask))
-    rbc_count = len(contours)
+    rbc_count = len(filtered_contours)
     area, perimeter, eccentricity = 0, 0, 0
     if props:
         area = props[0].area
