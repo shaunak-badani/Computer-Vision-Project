@@ -26,9 +26,65 @@ def extract_hog_features(image):
     )
     return features
 
-def preprocess_image(image_path):
+def visualize_processing_steps(image, save_path=None):
     """
-    Load and preprocess image
+    Visualize the processing steps: original, HOG features, and Otsu threshold
+    """
+    # Convert to grayscale if not already
+    if len(image.shape) == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image.copy()
+    
+    # Otsu's thresholding on the original scale (0-255)
+    gray_uint8 = (gray * 255).astype(np.uint8) if gray.max() <= 1.0 else gray.astype(np.uint8)
+    _, otsu = cv2.threshold(gray_uint8, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    
+    # HOG features with visualization
+    hog_features, hog_image = hog(
+        gray,
+        orientations=9,
+        pixels_per_cell=(16, 16),
+        cells_per_block=(2, 2),
+        visualize=True,
+        channel_axis=None
+    )
+    
+    # Normalize HOG visualization
+    hog_image = (hog_image - hog_image.min()) / (hog_image.max() - hog_image.min())
+    
+    # Create visualization
+    plt.figure(figsize=(15, 5))
+    
+    # Original image
+    plt.subplot(131)
+    plt.imshow(gray, cmap='gray')
+    plt.title('Original Image')
+    plt.axis('off')
+    
+    # Otsu's thresholding
+    plt.subplot(132)
+    plt.imshow(otsu, cmap='gray')
+    plt.title("Otsu's Thresholding")
+    plt.axis('off')
+    
+    # HOG features
+    plt.subplot(133)
+    plt.imshow(hog_image, cmap='viridis')
+    plt.title('HOG Features')
+    plt.axis('off')
+    
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path)
+        plt.close()
+    else:
+        plt.show()
+
+def preprocess_image(image_path, visualize=False):
+    """
+    Load and preprocess image with optional visualization
     """
     try:
         img = cv2.imread(image_path)
@@ -41,6 +97,19 @@ def preprocess_image(image_path):
         
         # Normalize pixel values
         gray = gray.astype(np.float32) / 255.0
+        
+        # Visualize if requested
+        if visualize:
+            # Create visualization directory if it doesn't exist
+            viz_dir = 'visualizations'
+            os.makedirs(viz_dir, exist_ok=True)
+            
+            # Generate visualization filename from input image path
+            base_name = os.path.splitext(os.path.basename(image_path))[0]
+            viz_path = os.path.join(viz_dir, f'{base_name}_processing_steps.png')
+            
+            visualize_processing_steps(gray, save_path=viz_path)
+            print(f"Visualization saved to: {viz_path}")
         
         return gray
         
@@ -56,19 +125,28 @@ def create_feature_dataset(image_paths, labels):
     processed_labels = []
     total_images = len(image_paths)
     
+    # Visualize first image as an example
+    first_visualization_done = False
+    
     for idx, (img_path, label) in enumerate(zip(image_paths, labels)):
         try:
             if (idx + 1) % 100 == 0:
                 print(f"Processing image {idx + 1}/{total_images}")
             
+            # Visualize first image only
+            visualize = not first_visualization_done
+            
             # Preprocess image
-            img = preprocess_image(img_path)
+            img = preprocess_image(img_path, visualize=visualize)
             if img is not None:
                 # Extract HOG features
                 hog_features = extract_hog_features(img)
                 
                 features_list.append(hog_features)
                 processed_labels.append(label)
+                
+                if visualize:
+                    first_visualization_done = True
             
         except Exception as e:
             print(f"Error processing {img_path}: {str(e)}")
