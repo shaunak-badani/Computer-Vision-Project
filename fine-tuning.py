@@ -24,8 +24,10 @@ images_h_dir = 'data/raw/AneRBC-I/Healthy_individuals/Original_images'
 masks_h_dir = 'data/raw/AneRBC-I/Healthy_individuals/Binary_segmented'
 
 # LOAD SAM2 MODEL
-sam2_checkpoint = "segment-anything-2/sam2_hiera_small.pt"
-model_cfg = "C:/Users/saksh/OneDrive/Documents/Duke Academics/Spring 2025/Deep Learning/CV-Module-Project/segment-anything-2/sam2/configs/sam2/sam2_hiera_s.yaml"
+# sam2_checkpoint = "segment-anything-2/sam2_hiera_small.pt"
+sam2_checkpoint = "./checkpoints/sam2_hiera_small.pt"
+# model_cfg = "C:/Users/saksh/OneDrive/Documents/Duke Academics/Spring 2025/Deep Learning/CV-Module-Project/segment-anything-2/sam2/configs/sam2/sam2_hiera_s.yaml"
+model_cfg = "configs/sam2/sam2_hiera_s.yaml"
 
 sam2_model = build_sam2(model_cfg, sam2_checkpoint, device="cuda")
 predictor = SAM2ImagePredictor(sam2_model)
