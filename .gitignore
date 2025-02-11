@@ -177,5 +177,4 @@ cython_debug/
 .pypirc
 
 /segment-anything-2
-/models
 /sample_data

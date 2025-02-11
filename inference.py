@@ -22,8 +22,10 @@ from sklearn.model_selection import train_test_split
 from sam2.build_sam import build_sam2
 from sam2.sam2_image_predictor import SAM2ImagePredictor
 
-sam2_checkpoint = "segment-anything-2/sam2_hiera_small.pt"
-model_cfg = "C:/Users/saksh/OneDrive/Documents/Duke Academics/Spring 2025/Deep Learning/CV-Module-Project/segment-anything-2/sam2/configs/sam2/sam2_hiera_s.yaml"
+# sam2_checkpoint = "segment-anything-2/sam2_hiera_small.pt"
+sam2_checkpoint = "./checkpoints/sam2_hiera_small.pt"
+# model_cfg = "C:/Users/saksh/OneDrive/Documents/Duke Academics/Spring 2025/Deep Learning/CV-Module-Project/segment-anything-2/sam2/configs/sam2/sam2_hiera_s.yaml"
+model_cfg = "configs/sam2/sam2_hiera_s.yaml"
 
 # Load the fine-tuned model
 sam2_fine_tuned = build_sam2(model_cfg, sam2_checkpoint, device="cuda")
