@@ -229,7 +229,7 @@ def predict_anemia_lgbm(img):
 def extract_features(image, mask):
     """Extracts morphological, texture, and color features from a masked image."""
 
-    binary_mask = np.where(mask == 255, 0, 1).astype(np.uint8)
+    binary_mask = np.where(mask > 0, 255, 0).astype(np.uint8)
     contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     MIN_RBC_AREA = 150.0
@@ -246,19 +246,15 @@ def extract_features(image, mask):
     # Morphological features
     props = regionprops(label(mask))
     rbc_count = len(filtered_contours)
-    area, perimeter, eccentricity = 0, 0, 0
+    area = 0
     if props:
         area = props[0].area
-        perimeter = props[0].perimeter
-        eccentricity = props[0].eccentricity
 
     # Texture features (GLCM) - Optimized by reducing gray levels
     gray = cv2.convertScaleAbs(gray, alpha=(255.0 / 64))  # Reduce gray levels to 64
     glcm = graycomatrix(gray, distances=[1], angles=[0], symmetric=True, normed=True)
     contrast = graycoprops(glcm, 'contrast')[0, 0]
     correlation = graycoprops(glcm, 'correlation')[0, 0]
-    energy = graycoprops(glcm, 'energy')[0, 0]
-    homogeneity = graycoprops(glcm, 'homogeneity')[0, 0]
 
     # Color features (Histogram)
     hist = cv2.calcHist([segmented], [0], mask, [256], [0, 256])
@@ -268,31 +264,27 @@ def extract_features(image, mask):
     red_green_ratio = mean_red / (np.mean(segmented[:, :, 1]) + 1e-7)  # Ratio of Red to Green
     
 
-    return [rbc_count, area, perimeter, eccentricity, contrast, correlation, energy, homogeneity, mean_intensity, mean_red, std_red, red_green_ratio]
+    return [rbc_count, area, contrast, correlation, mean_intensity, mean_red, std_red, red_green_ratio]
 
 
 def predict_anemia_dt(img, mask):
-    try:
-        # Load the classifier
-        classifier = joblib.load('models/decision_tree_model.joblib')
-        model = classifier['model']
-        scaler = classifier['scaler']
-        
-        features = extract_features(img, mask)
-        scaled_features = scaler.transform([features])
-        
-        # Make prediction
-        prediction = model.predict(scaled_features)[0]
-        probabilities = model.predict_proba(scaled_features)[0]
-        
-        result = {
-            'prediction': 'Anemic' if prediction == 1 else 'Healthy',
-            'confidence': float(probabilities[prediction]),
-        }
-        
-        return result
-        
-    except Exception as e:
-        print(f"Error during prediction: {str(e)}")
-        return None
+    # Load the classifier
+    classifier = joblib.load('models/decision_tree_model.joblib')
+    model = classifier['model']
+    scaler = classifier['scaler']
+    
+    features = extract_features(img, mask)
+    scaled_features = scaler.transform([features])
+    
+    # Make prediction
+    prediction = model.predict(scaled_features)[0]
+    probabilities = model.predict_proba(scaled_features)[0]
+    print(probabilities)
+    
+    result = {
+        'prediction': 'Anemic' if prediction == 1 else 'Healthy',
+        'confidence': float(probabilities[prediction]),
+    }
+    
+    return result
 

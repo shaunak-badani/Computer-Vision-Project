@@ -9,9 +9,11 @@ st.title("AneRBC Image Segmentation")
 
 st.sidebar.title("About This Project")
 st.sidebar.write("This tool segments red blood cells (RBCs) from microscopic images using fine-tuned SAM2 and other approaches.")
-st.sidebar.write("**Dataset:** AneRBC - A benchmark for anemia diagnosis using RBC images. [https://www.kaggle.com/datasets/jocelyndumlao/anerbc-anemia-diagnosis-using-rbc-images/data]")
-st.sidebar.write("**Paper:** Benchmark dataset for computer-aided anemia diagnosis using RBC images. [https://doi.org/10.1093/database/baae120]")
-st.sidebar.write("**Models:**\n- Fine-tuned SAM2\n- Out-of-the-box SAM2\n- Naïve approach \n- ML-based approach ")
+st.sidebar.write("**Dataset:**\n- AneRBC - A benchmark for anemia diagnosis using RBC images. [https://www.kaggle.com/datasets/jocelyndumlao/anerbc-anemia-diagnosis-using-rbc-images/data]")
+st.sidebar.write("**Paper:**\n- Benchmark dataset for computer-aided anemia diagnosis using RBC images. [https://doi.org/10.1093/database/baae120]")
+st.sidebar.write("**Models:**\n- Fine-tuned SAM2 + Decision Tree\n- Naïve approach (Out-of-the-box SAM2) \n- ML-based approach (HOG + Otsu + LGBM)")
+st.sidebar.write("**Implementation:**\n SAM is composed of three parts:\n- Image encoder: responsible for processing the image and creating the image embedding. This is the largest component and training it will demand strong GPU. We are NOT fine-tuning it.\n - Prompt encoder: processes input prompt, in our case the input point.\n - Mask decoder: takes the output of the image encoder and prompt encoder and produces the final segmentation masks.")
+st.sidebar.write("**Limitations:**\n- Training the image encoder would've improved performance much more.\n- We had to use the `small` models checkpoint due to compute limitations. Better checkpoints like `large` and `b+` would give better results.")
 
 cola, colb = st.columns(2)
 
@@ -19,7 +21,7 @@ with cola:
     image = st.file_uploader("Upload Image [Required]")
 
 with colb:
-    mask = st.file_uploader("Upload Mask [Optional]")
+    mask = st.file_uploader("Upload Mask")
 
 if image and st.button("Segment"):
     file_bytes = np.asarray(bytearray(image.read()), dtype=np.uint8)
@@ -88,7 +90,7 @@ if image and st.button("Segment"):
 
         st.header("Classification Results")
         metrics_data = {
-            "Models": ["HOG + LightGBM (Our)", "SAM + Decision Tree (Our)", "MobileNetV2", "Resnet152V2", "VGG16", "InceptionV3"],
+            "Models": ["HOG + LightGBM (Our)", "SAM + Decision Tree (Our)", "MobileNetV2 (Paper)", "Resnet152V2 (Paper)", "VGG16 (Paper)", "InceptionV3 (Paper)"],
             "Accuracy": [0.77, 0.76, 0.84, 0.62, 0.76, 0.70],
             "Precision": [0.71, 0.80, 0.84, 0.85, 0.84, 0.75],
             "Recall": [0.85, 0.71, 0.86, 0.91, 0.94, 0.94],
@@ -100,13 +102,11 @@ if image and st.button("Segment"):
 
         st.header("Classification Predictions")
         lightgbm_pred = predict_anemia_lgbm(img)
-        dt_pred = predict_anemia_dt(img, mask)
+        dt_pred = predict_anemia_dt(img, mask_img)
 
         predictions_data = {
             "Models": ["HOG + LightGBM (Our)", "SAM + Decision Tree (Our)"],
-            "Prediction": [lightgbm_pred['prediction'], "dt_pred['prediction']"],
-            "Confidence": [str(lightgbm_pred['confidence']), "str(dt_pred['confidence'])"],
+            "Prediction": [lightgbm_pred['prediction'], dt_pred['prediction']],
+            "Confidence": [str(lightgbm_pred['confidence']), str(dt_pred['confidence'])],
         }
         st.table(predictions_data)
-
-        st.header("Decision Tree Explainability")
