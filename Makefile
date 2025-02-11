@@ -7,10 +7,8 @@ install:
 
 # Target to run the fine-tuning.py script
 train:
-	python scripts/fine-tuning.py
-	python scripts/decision_tree.py
+	python setup.py
 	python scripts/extract_features_from_masks.py
-	python scripts/train_classifier.py
 
 # Target to run the main.py script
 run:

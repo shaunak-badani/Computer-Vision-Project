@@ -284,7 +284,7 @@ def predict_anemia(image_path):
     
     
 
-def main():
+def train_classifier():
     np.random.seed(42)
     
     print("\nLoading dataset...")
@@ -329,4 +329,4 @@ def main():
     print("Model saved as anemia_classifier.joblib in the models folder")
 
 if __name__ == "__main__":
-    main()
+    train_classifier()

@@ -1,20 +1,22 @@
 import numpy as np
-from scripts.build_features import build_features
-from scripts.make_dataset import make_dataset
-from scripts.model import train_model
+from scripts.train_classifier import train_classifier
+from scripts.decision_tree import train_decision_tree
+from scripts.fine_tuning import fine_tune_sam
 
 def train_pipeline():
     """
     Runs the training pipeline.
-    - Fetches the data
     - Runs pipeline and generates features
-    - Trains model and predicts final outcome
+    - Fine tunes model and predicts final outcome
     """
     print("Commencing training of pipeline!")
+    train_classifier()
+    train_decision_tree()
 
-    build_features()
-    make_dataset()
-    train_model()
+    print("Fine tuning SAM2!")
+    fine_tune_sam()
+
+
 
 if __name__ == "__main__":
     train_pipeline()

@@ -389,7 +389,7 @@ def fine_tune_SAM2(train_data, val_data):
 
     return train_losses, train_ious, val_losses, val_ious
 
-def main():
+def fine_tune_sam():
     train_data, val_data, test_data = prepare_data()
     train_losses, train_ious, val_losses, val_ious = fine_tune_SAM2(train_data, val_data)
 
@@ -398,7 +398,7 @@ def main():
                 "val_losses": val_losses, "val_ious": val_ious}, f)
         
 if __name__ == "__main__":
-    main()
+    fine_tune_sam()
 
 
 
