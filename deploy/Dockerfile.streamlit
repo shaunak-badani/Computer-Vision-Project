@@ -16,7 +16,7 @@ RUN pip3 install --upgrade pip
 
 
 # Copy amd requirements file
-COPY amd_requirements.txt .
+COPY deploy/amd_requirements.txt .
 
 RUN pip3 install --no-cache-dir -r amd_requirements.txt
 
