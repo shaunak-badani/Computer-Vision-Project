@@ -176,6 +176,5 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-/data
 /segment-anything-2
 /sample_data

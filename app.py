@@ -110,3 +110,6 @@ if image and st.button("Segment"):
             "Confidence": [str(lightgbm_pred['confidence']), str(dt_pred['confidence'])],
         }
         st.table(predictions_data)
+
+        st.header("Decision Tree Explainability")
+        st.image("dt_feature_imp.png")
