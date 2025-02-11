@@ -325,8 +325,8 @@ def main():
             'cells_per_block': (2, 2)
         }
     }
-    joblib.dump(classifier, 'anemia_classifier.joblib')
-    print("Model saved as anemia_classifier.joblib")
+    joblib.dump(classifier, 'models/anemia_classifier.joblib')
+    print("Model saved as anemia_classifier.joblib in the models folder")
 
 if __name__ == "__main__":
     main()

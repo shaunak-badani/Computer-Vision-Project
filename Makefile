@@ -5,7 +5,7 @@
 install:
 	@pip install -r requirements.txt
 
-# Target to run the setup.py script
+# Target to run the fine-tuning.py script
 train:
 	python3 setup.py
 

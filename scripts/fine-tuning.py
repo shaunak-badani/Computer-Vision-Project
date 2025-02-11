@@ -398,7 +398,7 @@ def main():
                 "val_losses": val_losses, "val_ious": val_ious}, f)
         
 if __name__ == "__main__":
-     main()
+    main()
 
 
 
