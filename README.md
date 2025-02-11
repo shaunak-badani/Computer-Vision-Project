@@ -4,6 +4,18 @@
 
 The application is hosted at: http://174.109.75.233
 
+- Create a virtual environment and install dependencies
+   ```
+   python3 -m venv .venv
+   source .venv/bin/activate
+   make install
+   ```
+   
+- Run the project / user interface:
+   ```
+   make run
+   ```
+
 ## **Problem Statement**
 Anemia is a condition characterized by a deficiency of red blood cells (RBCs) or hemoglobin, leading to reduced oxygen transport in the blood. Detecting anemia through automated blood sample image analysis can enhance diagnostic efficiency. This project focuses on segmenting RBCs from blood smear images and classifying them as healthy or anemic.
 
