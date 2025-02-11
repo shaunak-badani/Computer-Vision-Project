@@ -89,3 +89,11 @@ The model is deployed via **Streamlit**, providing an interactive interface to u
 
 ## **Ethics Statement**
 
+The dataset used for this project was the publicly available AneRBC dataset. The dataset was collected by them and ethical guidelines were followed. Approval of the Internal Review Board was taken. All participants involved in the study provided informed consent before participating, and they were explicitly informed about the nature of research.
+
+The fine-tuning of the Segment-Anything model was conducted with robust testing across various image quality conditions and microscopy settings. 
+
+It must be noted that this tool should be used in conjunction with the advice of trained healthcare professionals.
+
+We acknowledge our responsibility to monitor and address any emerging health concerns.
+
