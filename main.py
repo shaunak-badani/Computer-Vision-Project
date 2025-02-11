@@ -112,4 +112,4 @@ if image and st.button("Segment"):
         st.table(predictions_data)
 
         st.header("Decision Tree Explainability")
-        st.image("dt_feature_imp.png")
+        st.image("images/dt_feature_imp.png")
