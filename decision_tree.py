@@ -72,4 +72,4 @@ classifier = {
         'model': clf,
         'scaler': scaler,
     }
-joblib.dump(classifier, 'decision_tree_model.joblib')
+joblib.dump(classifier, 'models/decision_tree_model.joblib')
